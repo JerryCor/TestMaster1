@@ -1,4 +1,4 @@
-package com.hanweb.complat.controller.test;
+package com.zhuxj.maven_1.controller;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -17,58 +17,38 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.ResponseBody;
 
 import com.google.gson.JsonObject;
-import com.hanweb.complat.test.FtpUtil;
-import com.hanweb.complat.test.SunFtpUtil;
-import com.hanweb.jis.expansion.util.fastjson.JSON;
-import com.hanweb.jis.expansion.util.fastjson.JSONObject;
+
+import net.sf.json.JSONObject;
 
 @Controller
 @RequestMapping("ftp")
 public class TestController {
-  @RequestMapping("ftpload")
-  @ResponseBody
-  public String getFtp()
-  {
-  /*  FtpUtil ftp = new FtpUtil();
-    ftp.setEncode("GBK");
-    ftp.setFtpPath("/home/test/dahan");
-    ftp.setIp("123.56.84.192");
-    ftp.setPort(21);
-    ftp.setUsername("test");
-    ftp.setPassword("123456");
-    try {
-      ftp.connectServer();
-      FileInputStream input = new FileInputStream(new File("D:/6dce57c15cd849d9b712ebf6ea035e35.zip"));
-      if(ftp.upload("上传.zip", input)){
-        System.out.println("success");
-      }
-    } catch (FileNotFoundException e) {
-      e.printStackTrace();
-    }*/
-    SunFtpUtil spt = new SunFtpUtil("192.168.89.176", 111, "JerryC", "hanweb");
-    spt.connectServer();
-    spt.upload("D:/6dce57c15cd849d9b712ebf6ea035e35.zip", "d.zip");
-    return "Success";
-  }
   @RequestMapping(value="httpClient",method=RequestMethod.POST)
   @ResponseBody
-  public String returnJson(@RequestBody String jsonStr, HttpServletResponse response) throws IOException{
-    JSONObject obj = JSONObject.parseObject(jsonStr);
+  //,produces="text/html;charset=UTF-8"
+  public void returnJson(@RequestBody String jsonStr, HttpServletResponse response) throws IOException{
+	JSONObject obj = JSONObject.fromObject(jsonStr);
     JSONObject obj2 = new JSONObject();
     JsonObject jsonObj = new JsonObject();
     if("JerryC".equals(obj.getString("UserName"))){
-      obj2.put("result", "success");
-      obj2.put("mgs", "认证成功");
+    	jsonObj.addProperty("result", "success");
+    	jsonObj.addProperty("msg", "认证成功");
+    	obj2.put("result", "success");
+    	obj2.put("msg", "成功");
     }else{
-      obj2.put("result", "failed");
-      obj2.put("mgs", "认证失败");
+    	jsonObj.addProperty("result", "failed");
+    	jsonObj.addProperty("msg", "认证失败");
+    	obj2.put("result", "failed");
+    	obj2.put("msg", "失败");
     }
-   /* response.setCharacterEncoding("utf-8");
+    response.setContentType("text/html;charset=utf-8");
     PrintWriter out= null;
     out = response.getWriter();
-    out.print(obj2.toString());
+    out.print(jsonObj.toString());
     out.flush();
-    out.close();  存在乱码问题*/
-    return jsonObj.toString(); //直接返回无乱码问题
+    out.close();  
+   /* String json= jsonObj.toString();
+    String str = new String(json.getBytes("utf-8"),"utf-8");
+    return obj2.toString();*/
   }
 }
