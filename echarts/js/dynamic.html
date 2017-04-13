@@ -12,16 +12,12 @@
 		<script type="text/javascript">
 			var myChart = echarts.init(document.getElementById("main"));
 			function randomData() {
-			    now = new Date(+now + 3600000);
+			    now = new Date(+now + oneDay);
 			    value = value + Math.random() * 21 - 10;
-			    var year=[now.getFullYear(), now.getMonth(), now.getDate()].join('/');
-		    var mill = [now.getHours(),now.getMinutes()].join(':');
-		    var t = year.concat(" "+mill);
-		    console.log(t);
 			    return {
 			        name: now.toString(),
 			        value: [
-			            [now.getFullYear(), now.getMonth() + 1, now.getDate()].join('/').concat(now.getHours()),
+			            [now.getFullYear(), now.getMonth() + 1, now.getDate()].join('/'),
 			            Math.round(value)
 			        ]
 			    }
@@ -31,7 +27,7 @@
 			var now = +new Date(1997, 9, 3);
 			var oneDay = 24 * 3600 * 1000;
 			var value = Math.random() * 1000;
-			for (var i = 0; i < 5; i++) {
+			for (var i = 0; i < 1000; i++) {
 			    data.push(randomData());
 			}
 
@@ -41,7 +37,7 @@ option = {
 
 setInterval(function () {
 
-    for (var i = 0; i < 1; i++) {
+    for (var i = 0; i < 5; i++) {
         data.shift();
         data.push(randomData());
     }
@@ -83,7 +79,7 @@ setInterval(function () {
         data: data
     }]
     });
-}, 1000);
+}, 10000);
                     
 		</script>
 	</body>
