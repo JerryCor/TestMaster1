@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8" />
+		<title></title>
+		<script type="text/javascript" src="js/jquery-3.2.0.min.js" ></script>
+		<script>
+			$(function(){
+				//province
+				$.ajax({
+					url: "xml/test.xml",
+					success:function(xml){
+						$(xml).find("province").each(function(){
+							//var t  = $(this).attr("city"); //读取节点属性
+							var t  = $(this).find("id").text();
+							var v  = $(this).find("text").text();
+							$("#DropProvince").append("<option value="+v+">"+t+"</option>"); 
+						});
+					}
+				});
+				//city
+				$("#DropProvince").change(function(){ 
+				$("#sCity>option").remove(); 
+				$("#sArea>option").remove(); 
+				var pname = $("#DropProvince").find("option:selected").text(); 
+				var pnamev = $("#DropProvince").val(); 
+				$.ajax({url:"xml/test.xml", 
+				success:function(xml){
+   				 ///查找<province>下的所有第一级子元素(即城市) 
+				console.log(pname);
+				$(xml).find("province").eq('A').find("pcity>city").each(function(){ 
+				var city = $(this).find("cname").text();
+				var cityvalue = $(this).find("cvalue").text();
+				console.log("c"+city);
+				console.log("cv"+cityvalue);
+				$("#sCity").append("<option value="+cityvalue+">"+city+"</option>"); 
+				}); 
+				///查找<city>下的所有第一级子元素(即区域) 
+				var cname = $("#sCity").val(); 
+				$(xml).find("city[name='"+cname+"']>area").each(function(){ 
+				var area = $(this).attr("name");//this-> 
+				$("#sArea").append("<option>"+area+"</option>"); 
+				    }); 
+				   } 
+				   }); 
+				  }); 
+			});
+		</script>
+	</head>
+	<body>
+		<form id="form1"> 
+ <div> 
+ <select id="DropProvince" style="width:100px;"> 
+  <option>请选择</option> 
+ </select> 
+ <select id="sCity" style="width:100px;"> 
+  <option>请选择相应市</option> 
+ </select> 
+  <select id="sArea" style="width:100px;"> 
+  <option>请选择相应区</option> 
+ </select> 
+ </div> 
+ </form> 
+	</body>
+</html>
