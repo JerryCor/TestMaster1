@@ -1,22 +1,18 @@
-package com.hanweb.complat.test;
+package com.hanweb.jmopen.publish.util;
 
-import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.OutputStream;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.commons.net.ftp.FTP;
 import org.apache.commons.net.ftp.FTPClient;
-import org.apache.commons.net.ftp.FTPFile;
 import org.apache.commons.net.ftp.FTPReply;
 
 public class FtpUtil {
   private final Log logger = LogFactory.getLog(getClass());
 	private String encode = new String("GBK");
-	private String ftpPath = new String("/home/test/dahan");
+	private String ftpPath = new String("/temp");
 	private String ip;
 	private String username;
 	private String password;
@@ -90,7 +86,7 @@ public class FtpUtil {
 	/**
 	 * 连接ftp服务器
 	 * 
-	 * @return 连接结果
+	 * @throws IOException
 	 */
 	public boolean connectServer() {
 		int reply;
@@ -105,7 +101,7 @@ public class FtpUtil {
 			ftpClient.login(this.username, this.password);
 			reply = ftpClient.getReplyCode();
 			if (!FTPReply.isPositiveCompletion(reply)) {
-				logger.debug("连接失败");
+				logger.info("连接失败");
 				ftpClient.disconnect();
 				return false;
 			}
@@ -123,22 +119,28 @@ public class FtpUtil {
 	 *            服务器段要生成的文件（或文件夹）名
 	 * @param input
 	 *            要上传的文件（或文件夹）路径（含路径）
-	 * @return result 上传结果
+	 * @return result
 	 */
 	public boolean upload(String fileName, InputStream input) {
 		boolean result = false;
 		try {
+		  
 			boolean change = ftpClient.changeWorkingDirectory(ftpPath);
 			if(!change){
 				ftpClient.makeDirectory(ftpPath);
 				change = ftpClient.changeWorkingDirectory(ftpPath);
 			}
+			ftpClient.enterLocalPassiveMode();
 			ftpClient.setFileType(FTP.BINARY_FILE_TYPE);
 			if (change) {
 				result = ftpClient.storeFile(fileName, input);
 				if (result) {
-					logger.debug("上传成功!");
+					logger.info("上传成功!");
+					System.out.println("上传成功!");
 					return result;
+				}else{
+				  logger.info("上传失败！");
+				  System.out.println("上传失败!");
 				}
 			}
 			input.close();
@@ -146,7 +148,8 @@ public class FtpUtil {
 			return result;
 		} catch (Exception e) {
 			e.printStackTrace();
-			logger.debug("Ftp出现异常:" +e.toString());
+			System.out.println("FTP异常");
+			logger.info("Ftp出现异常:" +e.toString());
 			return result;
 		} finally {
 			try {
@@ -157,52 +160,6 @@ public class FtpUtil {
 		}
 	}
 	
-	/**
-   * ftp下载 
-   * 
-   * @param fileName
-   *            本地要生成的文件（或文件夹）名
-   * @return result 上传结果
-   */
-  public boolean download(String fileName) {
-    boolean result = false;
-    try {
-      boolean change = ftpClient.changeWorkingDirectory(ftpPath);
-      if(!change){
-        FTPFile[] fs = ftpClient.listFiles();
-        for(FTPFile ff:fs){
-          String name = ff.getName();
-          System.out.println(name);
-        }
-        ftpClient.makeDirectory(ftpPath);
-        change = ftpClient.changeWorkingDirectory(ftpPath);
-      }
-      ftpClient.setFileType(FTP.BINARY_FILE_TYPE);
-      if (change) {
-        FTPFile[] fs = ftpClient.listFiles(); 
-        for(FTPFile ff:fs){ 
-        if(ff.getName().equals(fileName)){ 
-        File localFile = new File("d:"+"/temp"+ff.getName()); 
-        OutputStream is = new FileOutputStream(localFile); 
-        ftpClient.retrieveFile(ff.getName(), is); 
-        is.close(); 
-        } 
-        } 
-      }
-      ftpClient.logout();
-      return result;
-    } catch (Exception e) {
-      e.printStackTrace();
-      logger.debug("Ftp出现异常:" +e.toString());
-      return result;
-    } finally {
-      try {
-        ftpClient.disconnect();
-      } catch (IOException e) {
-        e.printStackTrace();
-      }
-    }
-  }
 	
 	/**
 	 * 删除上传文件

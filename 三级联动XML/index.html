@@ -6,19 +6,19 @@
 		<script type="text/javascript" src="js/jquery-3.2.0.min.js" ></script>
 		<script>
 			$(function(){
-				//province
+				//city
 				$.ajax({
 					url: "xml/test.xml",
 					success:function(xml){
 						$(xml).find("province").each(function(){
 							//var t  = $(this).attr("city"); //读取节点属性
-							var t  = $(this).find("id").text();
-							var v  = $(this).find("text").text();
-							$("#DropProvince").append("<option value="+v+">"+t+"</option>"); 
+							var t  = $(this).attr("id");
+							var v  = $(this).attr("text");
+							$("#DropProvince").append("<option value="+t+">"+v+"</option>"); 
 						});
 					}
 				});
-				//city
+				//district/coundy
 				$("#DropProvince").change(function(){ 
 				$("#sCity>option").remove(); 
 				$("#sArea>option").remove(); 
@@ -26,38 +26,49 @@
 				var pnamev = $("#DropProvince").val(); 
 				$.ajax({url:"xml/test.xml", 
 				success:function(xml){
-   				 ///查找<province>下的所有第一级子元素(即城市) 
-				console.log(pname);
-				$(xml).find("province").eq('A').find("pcity>city").each(function(){ 
-				var city = $(this).find("cname").text();
-				var cityvalue = $(this).find("cvalue").text();
+				$(xml).find("province[id='"+pnamev+"']>city").each(function(){ 
+				var city = $(this).attr("text");
+				var cityvalue = $(this).attr("id");
 				console.log("c"+city);
 				console.log("cv"+cityvalue);
 				$("#sCity").append("<option value="+cityvalue+">"+city+"</option>"); 
-				}); 
-				///查找<city>下的所有第一级子元素(即区域) 
+				});
 				var cname = $("#sCity").val(); 
-				$(xml).find("city[name='"+cname+"']>area").each(function(){ 
-				var area = $(this).attr("name");//this-> 
-				$("#sArea").append("<option>"+area+"</option>"); 
-				    }); 
+				$(xml).find("city[id='"+cname+"']>county").each(function(){ 
+				var city = $(this).attr("text");
+				var cityvalue = $(this).attr("id");
+				$("#sArea").append("<option value="+cityvalue+">"+city+"</option>"); 
+				    });
 				   } 
 				   }); 
 				  }); 
+			  $("#sCity").change(function(){
+			  	$("#sArea>option").remove(); 
+			  	$.ajax({url:"xml/test.xml", 
+				success:function(xml){
+					var cname = $("#sCity").val(); 
+				  	$(xml).find("city[id='"+cname+"']>county").each(function(){ 
+					var city = $(this).attr("text");
+					var cityvalue = $(this).attr("id");
+					$("#sArea").append("<option value="+cityvalue+">"+city+"</option>"); 
+					    });
+				}
+			  });
 			});
+	});
 		</script>
 	</head>
 	<body>
 		<form id="form1"> 
  <div> 
- <select id="DropProvince" style="width:100px;"> 
-  <option>请选择</option> 
- </select> 
- <select id="sCity" style="width:100px;"> 
+ <select id="DropProvince" style="width:120px;"> 
   <option>请选择相应市</option> 
  </select> 
-  <select id="sArea" style="width:100px;"> 
-  <option>请选择相应区</option> 
+ <select id="sCity" style="width:120px;"> 
+  <option>请选择相应区/县</option> 
+ </select> 
+  <select id="sArea" style="width:140px;"> 
+  <option>请选择相应区/县名</option> 
  </select> 
  </div> 
  </form> 
