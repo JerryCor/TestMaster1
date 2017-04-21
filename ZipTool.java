@@ -10,10 +10,14 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.zip.CRC32;
 import java.util.zip.CheckedOutputStream;
+import java.util.zip.ZipFile;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.apache.tools.ant.Project;
+import org.apache.tools.ant.taskdefs.Zip;
+import org.apache.tools.ant.types.FileSet;
 import org.apache.tools.zip.ZipEntry;
 import org.apache.tools.zip.ZipOutputStream;
 
@@ -49,17 +53,18 @@ public class ZipTool {
     for (File file : files) {
         if (file.isDirectory()) {
             pathName = file.getPath().substring(basePath.length() + 1) + File.separator;
-            zos.putNextEntry(new ZipEntry(pathName));
+            zos.putNextEntry(new ZipEntry(new String(pathName.getBytes(),"utf-8")));
             zipFile(file, basePath, zos);
         } else {
             pathName = file.getPath().substring(basePath.length() + 1);
             is = new FileInputStream(file);
             bis = new BufferedInputStream(is);
-            zos.putNextEntry(new ZipEntry(pathName));
+            zos.putNextEntry(new ZipEntry(new String(pathName.getBytes(),"utf-8")));
             int nRead = 0;
             while ((nRead = bis.read(cache, 0, CACHE_SIZE)) != -1) {
                 zos.write(cache, 0, nRead);
             }
+            
             bis.close();
             is.close();
         }
@@ -80,11 +85,13 @@ public class ZipTool {
         return ;
       }  
       OutputStream os = null;
+      CheckedOutputStream cos = null;
       BufferedOutputStream bos = null;
       ZipOutputStream zos = null;
       try {
           os = new FileOutputStream(zipPath);
-          bos = new BufferedOutputStream(os);
+          cos = new CheckedOutputStream(os,new CRC32()); 
+          bos = new BufferedOutputStream(cos);
           zos = new ZipOutputStream(bos);
           // 解决中文文件名乱码
           zos.setEncoding(CHINESE_CHARSET);
@@ -96,8 +103,10 @@ public class ZipTool {
               basePath = file.getParent();
           }
           zipFile(file, basePath, zos);
+          zos.flush();
            
       } catch (Exception e) {
+          logger.info("zip exception" + e.getMessage());
           e.printStackTrace();
       } finally{
           try {
@@ -105,9 +114,12 @@ public class ZipTool {
                   zos.closeEntry();
                   zos.close();
               }
-              if (bos != null) {
-                  bos.close();
+              if (cos != null) {
+                  cos.close();
               }
+              if (bos != null) {
+                bos.close();
+            }
               if (os != null) {
                   os.close();
               }
@@ -115,20 +127,35 @@ public class ZipTool {
               e.printStackTrace();
           }
       }
+      
   }
-  public static void main(String[] args)   
-  {   
-      ZipTool util = new ZipTool();
-      String zipPath = "d:\\Test5";  
-      String dir = "d:\\ZIP";  
-      String zipFileName = "zhuxj201704181412.zip";  
-      try  
-      {
-        util.zip(zipPath, dir);  
-      }   
-      catch (Exception e)  
-      {  
-          e.printStackTrace();  
-      }  
-  }  
+  public void compressExe(String srcPathName, String finalFile) {   
+    File zipFile = new File(finalFile);    
+    File srcdir = new File(srcPathName);    
+    if (!srcdir.exists()){  
+      throw new RuntimeException(srcPathName + "不存在！");    
+    }   
+    
+    Project prj = new Project();    
+    Zip zip = new Zip();    
+    zip.setProject(prj);    
+    zip.setDestFile(zipFile);    
+    FileSet fileSet = new FileSet();    
+    fileSet.setProject(prj);    
+    fileSet.setDir(srcdir);    
+    fileSet.setIncludes(""); //包括哪些文件或文件夹 eg:zip.setIncludes("*.java");    
+    fileSet.setExcludes(""); //排除哪些文件或文件夹    
+    zip.addFileset(fileSet);    
+    zip.execute();    
+  }    
+  public static void main(String[] args){
+    ZipTool tool = new ZipTool();
+    /*tool.compressExe("C:/Users/admin/Desktop/qzbanshi2", "C:/Users/admin/Desktop/qzbanshi2.zip");*/
+    try {
+      tool.zip("C:/Users/admin/Desktop/qzbanshi2", "C:/Users/admin/Desktop/qzbanshi2.zip");
+    } catch (Exception e) {
+      // TODO Auto-generated catch block
+      e.printStackTrace();
+    }
+  }
 }
