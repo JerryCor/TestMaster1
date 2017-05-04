@@ -1,14 +1,16 @@
-package com.zhuxj.maven_1.ftp;
+package com.hanweb.jmopen.publish.util;
 
 import java.io.IOException;
 import java.io.InputStream;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.apache.commons.net.ftp.FTP;
 import org.apache.commons.net.ftp.FTPClient;
-import org.apache.commons.net.ftp.FTPFile;
 import org.apache.commons.net.ftp.FTPReply;
 
 public class FtpUtil {
+  private final Log logger = LogFactory.getLog(getClass());
 	private String encode = new String("GBK");
 	private String ftpPath = new String("/temp");
 	private String ip;
@@ -99,7 +101,7 @@ public class FtpUtil {
 			ftpClient.login(this.username, this.password);
 			reply = ftpClient.getReplyCode();
 			if (!FTPReply.isPositiveCompletion(reply)) {
-				System.out.println("连接失败");
+				logger.info("连接失败");
 				ftpClient.disconnect();
 				return false;
 			}
@@ -122,17 +124,23 @@ public class FtpUtil {
 	public boolean upload(String fileName, InputStream input) {
 		boolean result = false;
 		try {
+		  
 			boolean change = ftpClient.changeWorkingDirectory(ftpPath);
 			if(!change){
 				ftpClient.makeDirectory(ftpPath);
 				change = ftpClient.changeWorkingDirectory(ftpPath);
 			}
+			ftpClient.enterLocalPassiveMode();
 			ftpClient.setFileType(FTP.BINARY_FILE_TYPE);
 			if (change) {
 				result = ftpClient.storeFile(fileName, input);
 				if (result) {
+					logger.info("上传成功!");
 					System.out.println("上传成功!");
 					return result;
+				}else{
+				  logger.info("上传失败！");
+				  System.out.println("上传失败!");
 				}
 			}
 			input.close();
@@ -140,7 +148,8 @@ public class FtpUtil {
 			return result;
 		} catch (Exception e) {
 			e.printStackTrace();
-			System.err.println("Exception e in Ftp upload(): " + e.toString());
+			System.out.println("FTP异常");
+			logger.info("Ftp出现异常:" +e.toString());
 			return result;
 		} finally {
 			try {
@@ -149,5 +158,30 @@ public class FtpUtil {
 				e.printStackTrace();
 			}
 		}
+	}
+	
+	
+	/**
+	 * 删除上传文件
+	 * 
+	 * @param pathName 文件路径含文件名
+	 * @return 删除结果
+	 */
+	public boolean deleteFile(String pathName){
+	  try {
+      if(ftpClient.deleteFile(pathName)){
+        logger.debug("删除成功。");
+      }
+    } catch (IOException e) {
+      logger.debug("删除失败。" +e.getMessage());
+      return false;
+    }finally{
+      try {
+        ftpClient.disconnect();
+      } catch (IOException e) {
+        e.printStackTrace();
+      }
+    }
+	  return true;
 	}
 }
